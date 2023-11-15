@@ -1,0 +1,148 @@
+										       SET-C
+
+
+
+Q1.List all trains not scheduled on 10th October this year.
+
+select * from trains where train_id not in(select distinct train_id from trainrouteschedule where date='2023-10-10');
+
++----------+------------------------------------+
+| Train_id | Train_name                         |
++----------+------------------------------------+
+| T002     | Rajdhani Express                   |
+| T003     | Deccan Queen                       |
+| T004     | Duronto Express                    |
+| T006     | Humsafar Express                   |
+| T007     | Vande Bharat Express               |
+| T008     | Tejas Express                      |
+| T010     | Ahilyanagari Express               |
+| T011     | Lokmanya Tilak Terminus Express    |
+| T012     | Konkan Kanya Express               |
+| T013     | Purvanchal Express                 |
+| T014     | Ganga Kaveri Express               |
+| T015     | Garib Rath Express                 |
+| T016     | Chennai Express                    |
+| T017     | Howrah Mail                        |
+| T019     | Puri Shatabdi Express              |
+| T020     | Swarna Jayanti Express             |
+| T021     | Goa Sampark Kranti Express         |
+| T022     | Maharashtra Sampark Kranti Express |
+| T023     | Ratnagiri Express                  |
+| T024     | Sarnath Express                    |
+| T025     | Kashi Vishwanath Express           |
+| T026     | Kaveri Express                     |
+| T027     | Kolkata Mail                       |
+| T028     | Ahmedabad Express                  |
+| T029     | Mysuru Express                     |
+| T030     | Vasco Da Gama Express              |
++----------+------------------------------------+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Q2.List all fleets from Dharwad to Bengaluru, in ascending order of their monthly seats sold for the month of October this year.
+
+SELECT distinct
+    tr.train_name,
+    SUM(CASE WHEN MONTH(t.date) = 10 THEN 1 ELSE 0 END) AS seats_sold_in_october
+FROM
+    coaches c
+JOIN
+    tickets t ON c.coach_no = t.coach_no
+JOIN
+    trainrouteschedule trs ON t.train_id = trs.train_id AND t.route_id = trs.route_id
+JOIN
+    routes r ON t.route_id = r.route_id
+JOIN
+    trains tr ON t.train_id = tr.train_id
+WHERE
+    r.start_station = 'Dharwad' AND r.end_station = 'Bengaluru'
+GROUP BY
+    t.train_id
+ORDER BY
+    seats_sold_in_october ASC;
+
++------------------+-----------------------+
+| train_name       | seats_sold_in_october |
++------------------+-----------------------+
+| Duronto Express  |                     2 |
+| Tejas Express    |                     8 |
+| Gatimaan Express |                    18 |
++------------------+-----------------------+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Q3.List the details of most popular route of InterCity Express Trains.
+
+SELECT t.Route_id,r.Route, COUNT(Ticket_no) AS TicketCount
+FROM tickets t,routes r
+where t.Route_id=r.Route_id
+GROUP BY Route_id
+ORDER BY TicketCount DESC
+LIMIT 1;
+
++----------+---------------------+-------------+
+| Route_id | Route               | TicketCount |
++----------+---------------------+-------------+
+| R004     | Dharwad - Bengaluru |          18 |
++----------+---------------------+-------------+
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Q4.Display the details of the passengers who are frequent travellers with InterCity Express Trains. [Frequent traveller can be defined as the one who has travelled at least three times, irrespective of the route]
+
+SELECT p.p_id,p.p_name as NAME,p.p_age as AGE,p.p_phone_no as PHONE_NO,COUNT(Ticket_no) AS TotalTrips
+FROM tickets t,passengers p
+where t.p_id=p.p_id
+GROUP BY t.P_id
+HAVING TotalTrips > 3;
+
++------+--------------+------+------------+------------+
+| p_id | NAME         | AGE  | PHONE_NO   | TotalTrips |
++------+--------------+------+------------+------------+
+| P004 | Anjali Gupta |   68 | 6543210987 |         13 |
+| P107 | Raj Tiwari   |   28 | 8765432109 |          5 |
+| P150 | Smita Tiwari |   25 | 4321098765 |          4 |
++------+--------------+------+------------+------------+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Q5.Display the details of trains which arrived late at their destination, more than once in this year; Include the driver and co-driver information in the output. 
+
+SELECT
+    tas.train_id,
+    t.train_name,
+    trs.route_id,
+    tas.date,
+    ts.driver_id,
+    MAX(s.staff_name) AS driver_name,
+    ts.co_driver_id,
+    MAX(st.staff_name) AS co_driver_name
+FROM
+    trainstationschedule tas
+JOIN
+    trains t ON tas.train_id = t.train_id
+JOIN
+    trainrouteschedule trs ON tas.train_id = trs.train_id AND tas.date = trs.date
+JOIN
+    trainstaffschedule ts ON tas.train_id = ts.train_id AND tas.date = ts.date
+JOIN
+    staff s ON ts.driver_id = s.staff_id
+LEFT JOIN
+    staff st ON ts.co_driver_id = st.staff_id
+WHERE
+    YEAR(tas.date) = 2023 -- Replace with the desired year
+    AND (tas.act_arrival_time > tas.exp_arrival_time OR tas.act_departure_time > tas.exp_departure_time)
+GROUP BY
+    tas.train_id,
+    trs.route_id,
+    tas.date,
+    ts.driver_id,
+    ts.co_driver_id
+HAVING
+    COUNT(*) > 1;
+
++----------+------------------+----------+------------+-----------+--------------+--------------+----------------+
+| train_id | train_name       | route_id | date       | driver_id | driver_name  | co_driver_id | co_driver_name |
++----------+------------------+----------+------------+-----------+--------------+--------------+----------------+
+| T001     | Shatabdi Express | R001     | 2023-01-01 | S001      | Rahul Sharma | S003         | Amit Singh     |
++----------+------------------+----------+------------+-----------+--------------+--------------+----------------+

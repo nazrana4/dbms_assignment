@@ -1,0 +1,201 @@
+create database IntercityExpress;
+
+use IntercityExpress;
+
+CREATE TABLE coaches (
+    coach_no VARCHAR(50) NOT NULL PRIMARY KEY,
+    mileage DOUBLE,
+    last_maintained_date DATE,
+    capacity INT,
+    train_id VARCHAR(50),
+    FOREIGN KEY (Train_id) REFERENCES trains(train_id)
+);
+
+CREATE TABLE maintainance (
+    maint_id VARCHAR(50),
+    service_date DATE,
+    coach_no VARCHAR(50),
+    PRIMARY KEY (Maint_id),
+    FOREIGN KEY (coach_no) REFERENCES coaches(coach_no)
+);
+
+CREATE TABLE passengers (
+    p_id VARCHAR(50) NOT NULL PRIMARY KEY,
+    p_name VARCHAR(60),
+    P_age INT,
+    p_phone_no DOUBLE,
+    discount_offered VARCHAR(20),
+    p_category VARCHAR(60)
+);
+
+CREATE TABLE routes (
+    route_id VARCHAR(50) NOT NULL PRIMARY KEY,
+    route VARCHAR(60),
+    start_station VARCHAR(60),
+    end_station VARCHAR(60),
+    distance_in_mm DOUBLE,
+    time_taken VARCHAR(50),
+    operating_days VARCHAR(60)
+);
+
+CREATE TABLE seats (
+    seat_id VARCHAR(50) NOT NULL PRIMARY KEY,
+    coach_no VARCHAR(50) NOT NULL,
+    PRIMARY KEY (Seat_id, Coach_no),
+    FOREIGN KEY (coach_no) REFERENCES coaches(coach_no)
+);
+
+CREATE TABLE staff (
+    staff_id VARCHAR(50) NOT NULL PRIMARY KEY,
+    staff_name VARCHAR(60),
+    phone_no DOUBLE,
+    city VARCHAR(60)
+);
+
+CREATE TABLE stations (
+    station_id VARCHAR(50) NOT NULL PRIMARY KEY,
+    station_name VARCHAR(60)
+);
+
+CREATE TABLE tickets (
+    ticket_no VARCHAR(50) NOT NULL PRIMARY KEY,
+    train_id VARCHAR(50),
+    TA_id VARCHAR(50),
+    p_id VARCHAR(50),
+    price DOUBLE,
+    confirmed CHAR(5),
+    date DATE,
+    time TIME,
+    route_id VARCHAR(50),
+    coach_no VARCHAR(50),
+    seat_id VARCHAR(50),
+    FOREIGN KEY (train_id) REFERENCES trains(train_id),
+    FOREIGN KEY (TA_id) REFERENCES travelagents(TA_id),
+    FOREIGN KEY (p_id) REFERENCES passengers(p_id),
+    FOREIGN KEY (route_id) REFERENCES routes(route_id),
+    FOREIGN KEY (coach_no) REFERENCES coaches(coach_no),
+    FOREIGN KEY (seat_id, coach_no) REFERENCES seats(seat_id, coach_no)
+);
+
+CREATE TABLE trainrouteschedule (
+    train_id VARCHAR(50) NOT NULL,
+    route_id VARCHAR(50) NOT NULL,
+    date DATE NOT NULL,
+    start_time TIME,
+    end_time TIME,
+    PRIMARY KEY (train_id, route_id, date),
+    FOREIGN KEY (train_id) REFERENCES trains(train_id),
+    FOREIGN KEY (route_id) REFERENCES routes(route_id)
+);
+
+CREATE TABLE trains (
+    train_id VARCHAR(50) NOT NULL PRIMARY KEY,
+    train_name VARCHAR(50)
+);
+
+CREATE TABLE trainstaffschedule (
+    train_id VARCHAR(50) NOT NULL,
+    driver_id VARCHAR(50) NOT NULL,
+    date DATE NOT NULL,
+    co_driver_id VARCHAR(60),
+    PRIMARY KEY (train_id, driver_id, date),
+    FOREIGN KEY (co_driver_id) REFERENCES staff(staff_id)
+);
+
+CREATE TABLE trainstationschedule (
+    train_id VARCHAR(50) NOT NULL,
+    station_id VARCHAR(50) NOT NULL,
+    date DATE,
+    exp_arrival_time TIME NOT NULL,
+    exp_departure_time TIME NOT NULL,
+    act_arrival_time TIME,
+    act_departure_time TIME,
+    PRIMARY KEY (train_id, station_id),
+    FOREIGN KEY (train_id) REFERENCES trains(train_id),
+    FOREIGN KEY (station_id) REFERENCES stations(station_id)
+);
+
+CREATE TABLE travelagents (
+    TA_id VARCHAR(50) NOT NULL PRIMARY KEY,
+    TA_name VARCHAR(60),
+    TA_phone_no DOUBLE
+);
+
+load data infile 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/coaches.csv'
+into table coaches
+fields terminated by ','
+lines terminated by '\r\n'
+ignore 1 lines;
+
+INSERT INTO IntercityExpress.Maintainance (Maint_id, Service_date, Coach_no) VALUES     ('MAINT001', '2023-04-20', 'COACH001'),     ('MAINT002', '2023-06-25', 'COACH002'),     ('MAINT003', '2023-02-15', 'COACH003'),     ('MAINT004', '2023-08-10',
+'COACH004'),     ('MAINT005', '2023-12-05', 'COACH005'),     ('MAINT006', '2023-09-20', 'COACH006'),     ('MAINT007', '2023-01-30', 'COACH007'),     ('MAINT008', '2023-07-15', 'COACH008'),     ('MAINT009', '2023-03-13', 'COACH009'),     ('MAINT010', '2023-10-25', 'COACH010'),     ('MAINT011', '2023-05-12', 'COACH011'),     ('MAINT012', '2023-12-20', 'COACH012'),     ('MAINT013', '2023-04-05', 'COACH013'),     ('MAINT014', '2023-07-01', 'COACH014'),     ('MAINT015', '2023-02-22', 'COACH015'),     ('MAINT016', '2023-08-15', 'COACH016'),     ('MAINT017', '2023-12-01', 'COACH017'),     ('MAINT018', '2023-09-08', 'COACH018'),     ('MAINT019', '2023-01-15', 'COACH019'),     ('MAINT020', '2023-07-30', 'COACH020');
+
+
+load data infile 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/passengers.csv'
+into table passengers
+fields terminated by ','
+lines terminated by '\r\n'
+ignore 1 lines;
+
+load data infile 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/routes.csv'
+into table routes
+fields terminated by ','
+lines terminated by '\r\n'
+ignore 1 lines;
+
+load data infile 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/seats.csv'
+into table seats
+fields terminated by ','
+lines terminated by '\r\n'
+ignore 1 lines;
+
+load data infile 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/staff.csv'
+into table staff
+fields terminated by ','
+lines terminated by '\r\n'
+ignore 1 lines;
+
+load data infile 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/stations.csv'
+into table stations
+fields terminated by ','
+lines terminated by '\r\n'
+ignore 1 lines;
+
+load data infile 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/tickets.csv'
+into table tickets
+fields terminated by ','
+lines terminated by '\r\n'
+ignore 1 lines;
+
+load data infile 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/trainrouteschedule.csv'
+into table trainrouteschedule
+fields terminated by ','
+lines terminated by '\r\n'
+ignore 1 lines;
+
+load data infile 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/trains.csv'
+into table trains
+fields terminated by ','
+lines terminated by '\r\n'
+ignore 1 lines;
+
+
+load data infile 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/trainstaffschedule.csv'
+into table trainstaffschedule
+fields terminated by ','
+lines terminated by '\r\n'
+ignore 1 lines;
+
+load data infile 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/trainstationschedule.csv'
+into table trainstationschedule
+fields terminated by ','
+lines terminated by '\r\n'
+ignore 1 lines;
+
+load data infile 'C:/ProgramData/MySQL/MySQL Server 8.0/Uploads/travelagents.csv'
+into table travelagents
+fields terminated by ','
+lines terminated by '\r\n'
+ignore 1 lines;
+
+
