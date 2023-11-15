@@ -1,0 +1,86 @@
+Set B
+1.	Show schedule of all trips including main driver information for 10th October this year.
+
+SELECT ts.date, ts.start_time, ts.end_time, tss.driver_id, s.staff_name AS driver_name
+FROM trainrouteschedule ts
+JOIN trainstaffschedule tss ON ts.train_id = tss.train_id AND ts.date = tss.date
+JOIN staff s ON tss.driver_id = s.staff_id
+WHERE ts.date = '2023-10-10';
+
++------------+------------+----------+-----------+-------------+
+| date       | start_time | end_time | driver_id | driver_name |
++------------+------------+----------+-----------+-------------+
+| 2023-10-10 | 11:20:00   | 22:30:00 | S043      | Rahul Patel |
+| 2023-10-10 | 10:15:00   | 20:15:00 | S043      | Rahul Patel |
++------------+------------+----------+-----------+-------------+
+
+2.	List all coaches with mileage between 4000 and 4999 km covered for September this year; include information on the coach, its last service date and total number of scheduled trips.
+
+SELECT c.coach_no, c.mileage, m.service_date AS last_maintained_date, COUNT(trs.route_id) AS total_trips
+FROM coaches c
+JOIN maintainance m ON c.coach_no = m.coach_no
+LEFT JOIN trainrouteschedule trs ON c.train_id = trs.train_id AND MONTH(trs.date) = 9
+WHERE c.mileage BETWEEN 4000 AND 4999
+GROUP BY c.coach_no, c.mileage, m.service_date;
+
++----------+---------+----------------------+-------------+
+| coach_no | mileage | last_maintained_date | total_trips |
++----------+---------+----------------------+-------------+
+| COACH001 |    4500 | 2023-04-20           |           0 |
+| COACH009 |    4700 | 2023-03-13           |           0 |
+| COACH011 |    4100 | 2023-05-12           |           0 |
++----------+---------+----------------------+-------------+
+
+
+3.	List all agents, in descending order of percentage of confirmed booking each trip in the month of October this year. Include agent and route information in your result.
+
+SELECT ta.TA_id, ta.TA_name, r.route_id, COUNT(t.ticket_no) AS total_bookings,SUM(CASE WHEN t.confirmed = 'yes' THEN 1 ELSE 0 END) AS confirmed_bookings,(SUM(CASE WHEN t.confirmed = 'yes' 	THEN 1 ELSE 0 END) / COUNT(t.ticket_no)) * 100 AS percentage_confirmed
+FROM travelagents ta
+JOIN tickets t ON ta.TA_id = t.TA_id
+JOIN trainrouteschedule trs ON t.train_id = trs.train_id AND t.route_id = trs.route_id AND MONTH(trs.date) = 10
+JOIN routes r ON t.route_id = r.route_id
+GROUP BY ta.TA_id, ta.TA_name, r.route_id
+ORDER BY percentage_confirmed DESC;
+
+
++-------+------------------+----------+----------------+--------------------+----------------------+
+| TA_id | TA_name          | route_id | total_bookings | confirmed_bookings | percentage_confirmed |
++-------+------------------+----------+----------------+--------------------+----------------------+
+| TA020 | Alok Travelpoint | R020     |              1 |                  1 |             100.0000 |
++-------+------------------+----------+----------------+--------------------+----------------------+
+
+
+4.	Display the details of the routes where majority of bookings are not made by agents.
+
+SELECT r.route_id, r.route, COUNT(t.ticket_no) AS total_bookings,SUM(CASE WHEN t.TA_id IS NULL THEN 1 ELSE 0 END) AS bookings_not_by_agents
+FROM routes r
+LEFT JOIN tickets t ON r.route_id = t.route_id
+GROUP BY r.route_id, r.route
+HAVING bookings_not_by_agents > (0.5 * COUNT(t.ticket_no));
+
++----------+-------------------------+----------------+------------------------+
+| route_id | route                   | total_bookings | bookings_not_by_agents |
++----------+-------------------------+----------------+------------------------+
+| R020     | Gandhinagar - Ahmedabad |              3 |                      2 |
++----------+-------------------------+----------------+------------------------+
+
+
+
+5.	Display the details of the agents who have made maximum commission in the Month of September.
+
+
+
+SELECT ta.TA_id, ta.TA_name, SUM(t.price * (p.discount_offered / 100)) AS total_commission
+FROM travelagents ta
+JOIN tickets t ON ta.TA_id = t.TA_id
+JOIN passengers p ON t.p_id = p.p_id
+WHERE MONTH(t.date) = 09
+GROUP BY ta.TA_id, ta.TA_name
+ORDER BY total_commission DESC
+LIMIT 1;
+
++-------+------------------+------------------+
+| TA_id | TA_name          | total_commission |
++-------+------------------+------------------+
+| TA009 | Aryan Travel Hub |               10 |
++-------+------------------+------------------+
