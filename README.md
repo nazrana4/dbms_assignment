@@ -1,7 +1,10 @@
 # dbms_assignment
 IntercityExpress Database Assignment
 
-Group Members: Nazrana Bagwan, Arya Jawarkar, Aparimita Ranpise
+Group Members: 
+Nazrana Bagwan 23112047
+Arya Jawarkar 23112015
+Aparimita Ranpise 23112031
 
 This database was created after veryfying all the data requirements and then creating the required tables(normalized). All the work was done on MySQL.
 Tables creation and data loading was done by Nazrana and Arya. 
