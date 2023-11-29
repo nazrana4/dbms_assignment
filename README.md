@@ -37,7 +37,7 @@ select Train_id,Train_name from (routes r natural join tickets t) natural join (
 Q.2) List all the routes in descending order of seats sold, including route information and distribution of seats sold (Children, Adult, Senior Citizen) in the month of October this year.
 ```sql
 select r.Route,count(Ticket_no) as totSeats,sum(case when p.P_category = 'Children' then 1 else 0 end) as Children,sum(case when p.P_category = 'Adult' then 1 else 0 end) as Adult,sum(case when p.P_category = 'senior citizen' then 1 else 0 end) as SeniorCitizen from routes r join tickets t on r.Route_id = t.route_id join passengers p on p.P_id = t.P_id where monthName(t.Date) = 'October' and year(t.Date) = year(now()) group by r.Route order by totSeats desc;
-```
+``` 
 +------------------------+----------+----------+-------+---------------+
 | Route                  | totSeats | Children | Adult | SeniorCitizen |
 +------------------------+----------+----------+-------+---------------+
