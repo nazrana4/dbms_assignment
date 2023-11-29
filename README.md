@@ -106,13 +106,13 @@ select r.* from routes r natural join tickets t group by r.Route_id order by cou
 
 Set B
 1.	Show schedule of all trips including main driver information for 10th October this year.
-
+```sql
 SELECT ts.date, ts.start_time, ts.end_time, tss.driver_id, s.staff_name AS driver_name
 FROM trainrouteschedule ts
 JOIN trainstaffschedule tss ON ts.train_id = tss.train_id AND ts.date = tss.date
 JOIN staff s ON tss.driver_id = s.staff_id
 WHERE ts.date = '2023-10-10';
-
+```
 +------------+------------+----------+-----------+-------------+
 | date       | start_time | end_time | driver_id | driver_name |
 +------------+------------+----------+-----------+-------------+
@@ -121,14 +121,14 @@ WHERE ts.date = '2023-10-10';
 +------------+------------+----------+-----------+-------------+
 
 2.	List all coaches with mileage between 4000 and 4999 km covered for September this year; include information on the coach, its last service date and total number of scheduled trips.
-
+```sql
 SELECT c.coach_no, c.mileage, m.service_date AS last_maintained_date, COUNT(trs.route_id) AS total_trips
 FROM coaches c
 JOIN maintainance m ON c.coach_no = m.coach_no
 LEFT JOIN trainrouteschedule trs ON c.train_id = trs.train_id AND MONTH(trs.date) = 9
 WHERE c.mileage BETWEEN 4000 AND 4999
 GROUP BY c.coach_no, c.mileage, m.service_date;
-
+```
 +----------+---------+----------------------+-------------+
 | coach_no | mileage | last_maintained_date | total_trips |
 +----------+---------+----------------------+-------------+
@@ -139,7 +139,7 @@ GROUP BY c.coach_no, c.mileage, m.service_date;
 
 
 3.	List all agents, in descending order of percentage of confirmed booking each trip in the month of October this year. Include agent and route information in your result.
-
+```sql
 SELECT ta.TA_id, ta.TA_name, r.route_id, COUNT(t.ticket_no) AS total_bookings,SUM(CASE WHEN t.confirmed = 'yes' THEN 1 ELSE 0 END) AS confirmed_bookings,(SUM(CASE WHEN t.confirmed = 'yes' 	THEN 1 ELSE 0 END) / COUNT(t.ticket_no)) * 100 AS percentage_confirmed
 FROM travelagents ta
 JOIN tickets t ON ta.TA_id = t.TA_id
@@ -147,7 +147,7 @@ JOIN trainrouteschedule trs ON t.train_id = trs.train_id AND t.route_id = trs.ro
 JOIN routes r ON t.route_id = r.route_id
 GROUP BY ta.TA_id, ta.TA_name, r.route_id
 ORDER BY percentage_confirmed DESC;
-
+```
 
 +-------+------------------+----------+----------------+--------------------+----------------------+
 | TA_id | TA_name          | route_id | total_bookings | confirmed_bookings | percentage_confirmed |
@@ -157,13 +157,13 @@ ORDER BY percentage_confirmed DESC;
 
 
 4.	Display the details of the routes where majority of bookings are not made by agents.
-
+```sql
 SELECT r.route_id, r.route, COUNT(t.ticket_no) AS total_bookings,SUM(CASE WHEN t.TA_id IS NULL THEN 1 ELSE 0 END) AS bookings_not_by_agents
 FROM routes r
 LEFT JOIN tickets t ON r.route_id = t.route_id
 GROUP BY r.route_id, r.route
 HAVING bookings_not_by_agents > (0.5 * COUNT(t.ticket_no));
-
+```
 +----------+-------------------------+----------------+------------------------+
 | route_id | route                   | total_bookings | bookings_not_by_agents |
 +----------+-------------------------+----------------+------------------------+
@@ -175,7 +175,7 @@ HAVING bookings_not_by_agents > (0.5 * COUNT(t.ticket_no));
 5.	Display the details of the agents who have made maximum commission in the Month of September.
 
 
-
+```sql
 SELECT ta.TA_id, ta.TA_name, SUM(t.price * (p.discount_offered / 100)) AS total_commission
 FROM travelagents ta
 JOIN tickets t ON ta.TA_id = t.TA_id
@@ -184,9 +184,158 @@ WHERE MONTH(t.date) = 09
 GROUP BY ta.TA_id, ta.TA_name
 ORDER BY total_commission DESC
 LIMIT 1;
-
+```
 +-------+------------------+------------------+
 | TA_id | TA_name          | total_commission |
 +-------+------------------+------------------+
 | TA009 | Aryan Travel Hub |               10 |
 +-------+------------------+------------------+
+
+
+----SET C
+
+										  
+Q1.List all trains not scheduled on 10th October this year.
+```sql
+select * from trains where train_id not in(select distinct train_id from trainrouteschedule where date='2023-10-10');
+```
++----------+------------------------------------+
+| Train_id | Train_name                         |
++----------+------------------------------------+
+| T002     | Rajdhani Express                   |
+| T003     | Deccan Queen                       |
+| T004     | Duronto Express                    |
+| T006     | Humsafar Express                   |
+| T007     | Vande Bharat Express               |
+| T008     | Tejas Express                      |
+| T010     | Ahilyanagari Express               |
+| T011     | Lokmanya Tilak Terminus Express    |
+| T012     | Konkan Kanya Express               |
+| T013     | Purvanchal Express                 |
+| T014     | Ganga Kaveri Express               |
+| T015     | Garib Rath Express                 |
+| T016     | Chennai Express                    |
+| T017     | Howrah Mail                        |
+| T019     | Puri Shatabdi Express              |
+| T020     | Swarna Jayanti Express             |
+| T021     | Goa Sampark Kranti Express         |
+| T022     | Maharashtra Sampark Kranti Express |
+| T023     | Ratnagiri Express                  |
+| T024     | Sarnath Express                    |
+| T025     | Kashi Vishwanath Express           |
+| T026     | Kaveri Express                     |
+| T027     | Kolkata Mail                       |
+| T028     | Ahmedabad Express                  |
+| T029     | Mysuru Express                     |
+| T030     | Vasco Da Gama Express              |
++----------+------------------------------------+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Q2.List all fleets from Dharwad to Bengaluru, in ascending order of their monthly seats sold for the month of October this year.
+```sql
+SELECT distinct
+    tr.train_name,
+    SUM(CASE WHEN MONTH(t.date) = 10 THEN 1 ELSE 0 END) AS seats_sold_in_october
+FROM
+    coaches c
+JOIN
+    tickets t ON c.coach_no = t.coach_no
+JOIN
+    trainrouteschedule trs ON t.train_id = trs.train_id AND t.route_id = trs.route_id
+JOIN
+    routes r ON t.route_id = r.route_id
+JOIN
+    trains tr ON t.train_id = tr.train_id
+WHERE
+    r.start_station = 'Dharwad' AND r.end_station = 'Bengaluru'
+GROUP BY
+    t.train_id
+ORDER BY
+    seats_sold_in_october ASC;
+```
++------------------+-----------------------+
+| train_name       | seats_sold_in_october |
++------------------+-----------------------+
+| Duronto Express  |                     2 |
+| Tejas Express    |                     8 |
+| Gatimaan Express |                    18 |
++------------------+-----------------------+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Q3.List the details of most popular route of InterCity Express Trains.
+```sql
+SELECT t.Route_id,r.Route, COUNT(Ticket_no) AS TicketCount
+FROM tickets t,routes r
+where t.Route_id=r.Route_id
+GROUP BY Route_id
+ORDER BY TicketCount DESC
+LIMIT 1;
+```
++----------+---------------------+-------------+
+| Route_id | Route               | TicketCount |
++----------+---------------------+-------------+
+| R004     | Dharwad - Bengaluru |          18 |
++----------+---------------------+-------------+
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Q4.Display the details of the passengers who are frequent travellers with InterCity Express Trains. [Frequent traveller can be defined as the one who has travelled at least three times, irrespective of the route]
+```sql
+SELECT p.p_id,p.p_name as NAME,p.p_age as AGE,p.p_phone_no as PHONE_NO,COUNT(Ticket_no) AS TotalTrips
+FROM tickets t,passengers p
+where t.p_id=p.p_id
+GROUP BY t.P_id
+HAVING TotalTrips > 3;
+```
++------+--------------+------+------------+------------+
+| p_id | NAME         | AGE  | PHONE_NO   | TotalTrips |
++------+--------------+------+------------+------------+
+| P004 | Anjali Gupta |   68 | 6543210987 |         13 |
+| P107 | Raj Tiwari   |   28 | 8765432109 |          5 |
+| P150 | Smita Tiwari |   25 | 4321098765 |          4 |
++------+--------------+------+------------+------------+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Q5.Display the details of trains which arrived late at their destination, more than once in this year; Include the driver and co-driver information in the output. 
+```sql
+SELECT
+    tas.train_id,
+    t.train_name,
+    trs.route_id,
+    tas.date,
+    ts.driver_id,
+    MAX(s.staff_name) AS driver_name,
+    ts.co_driver_id,
+    MAX(st.staff_name) AS co_driver_name
+FROM
+    trainstationschedule tas
+JOIN
+    trains t ON tas.train_id = t.train_id
+JOIN
+    trainrouteschedule trs ON tas.train_id = trs.train_id AND tas.date = trs.date
+JOIN
+    trainstaffschedule ts ON tas.train_id = ts.train_id AND tas.date = ts.date
+JOIN
+    staff s ON ts.driver_id = s.staff_id
+LEFT JOIN
+    staff st ON ts.co_driver_id = st.staff_id
+WHERE
+    YEAR(tas.date) = 2023 -- Replace with the desired year
+    AND (tas.act_arrival_time > tas.exp_arrival_time OR tas.act_departure_time > tas.exp_departure_time)
+GROUP BY
+    tas.train_id,
+    trs.route_id,
+    tas.date,
+    ts.driver_id,
+    ts.co_driver_id
+HAVING
+    COUNT(*) > 1;
+```
++----------+------------------+----------+------------+-----------+--------------+--------------+----------------+
+| train_id | train_name       | route_id | date       | driver_id | driver_name  | co_driver_id | co_driver_name |
++----------+------------------+----------+------------+-----------+--------------+--------------+----------------+
+| T001     | Shatabdi Express | R001     | 2023-01-01 | S001      | Rahul Sharma | S003         | Amit Singh     |
++----------+------------------+----------+------------+-----------+--------------+--------------+----------------+
